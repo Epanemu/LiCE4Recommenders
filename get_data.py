@@ -86,11 +86,10 @@ def get_data(data_name: str):
         data = load_dataset("McAuley-Lab/Amazon-Reviews-2023", "0core_rating_only_Books", trust_remote_code=True)
         dataset = []
         for d in data["full"]:
-            print(d)
             dataset.append({
                 'user_id': d['user_id'],
                 'item_id': d['parent_asin'],
-                'rating': d['rating'],
+                'rating': float(d['rating']),
             })
 
         df = pd.DataFrame(dataset)
