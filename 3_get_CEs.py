@@ -131,11 +131,11 @@ for user_id, rows in df.groupby(["user_id"]):
         stats["couterfactual_ll"] = spn.compute_ll(spn_cf)
         stats["factual_ll"] = spn.compute_ll(spn_f)
         stats["distance"] = np.abs(factual - res[0])
-        stats["sparsity"] = np.sum(np.isclose(factual, res[0], atol=0.0001))
+        stats["sparsity"] = np.sum(~np.isclose(factual, res[0], atol=0.0001))
         allstats[user_id][expl_i](stats)
 
 with open(
-    f"{help_folder}/{data_name}/{fold}/CEs/stats_{sys.argv[5]}_{sys.argv[6]}.pickle",
+    f"{help_folder}/{data_name}/{fold}/CEs/stats_{group_f}_{'rating' if rating_used else 'binary'}_{sys.argv[5]}_{sys.argv[6]}.pickle",
     "wb",
 ) as f:
     pickle.dump(allstats, f)
