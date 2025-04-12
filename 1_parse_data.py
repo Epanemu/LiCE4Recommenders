@@ -1,11 +1,13 @@
-from get_data import get_data
-from sklearn.model_selection import KFold
-import pickle
-import numpy as np
 import os
+import pickle
 import sys
 
-data_name = sys.argv[1] # yelp, netflix, amazon
+import numpy as np
+from sklearn.model_selection import KFold
+
+from get_data import get_data
+
+data_name = sys.argv[1]  # yelp, netflix, amazon
 min_items_in_categ = int(sys.argv[2])
 min_reviews_of_user = int(sys.argv[3])
 min_reviews_of_item = int(sys.argv[4])
@@ -23,7 +25,11 @@ categ_order = sorted([c for c in categs.keys() if len(categs[c]) >= min_items_in
 groups = [categs[cat] for cat in categ_order]
 
 user_rws = df.groupby(["user_id"]).size()
-users = [user for user, review_count in user_rws.items() if review_count >= min_reviews_of_user]
+users = [
+    user
+    for user, review_count in user_rws.items()
+    if review_count >= min_reviews_of_user
+]
 print(f"Users from {len(user_rws)} to {len(users)}")
 df_sub = df[df["user_id"].isin(users)]
 
@@ -32,7 +38,11 @@ items = {i: False for i in item_rws.keys()}
 for g in groups:
     for i in g:
         items[i] = True
-ok_items = [i for i, v in items.items() if v and item_rws[i] >= min_reviews_of_item]
+ok_items = [
+    i
+    for i, v in items.items()
+    if v and i in item_rws and item_rws[i] >= min_reviews_of_item
+]
 print(f"Items from {len(item_rws)} to {len(ok_items)}")
 
 df_sub = df_sub[df_sub["item_id"].isin(ok_items)]
