@@ -59,6 +59,15 @@ class EASE:
         df["user_id"] = self.user_enc.inverse_transform(df["user_id"])
         return df
 
+    def predict_mine(self, train, user, vec, items, k):
+        items = self.item_enc.transform(items)
+        dd = train.loc[train.user_id == user]
+        dd["ci"] = self.item_enc.transform(dd["item_id"])
+        user_preds = [self.predict_for_user(user, dd, vec.dot(self.B), items, k)]
+        df = pd.concat(user_preds)
+        df["item_id"] = self.item_enc.inverse_transform(df["item_id"])
+        return df
+
     @staticmethod
     def predict_for_user(user, group, pred, items, k):
         watched = set(group["ci"])

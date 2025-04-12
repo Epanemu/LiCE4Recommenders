@@ -60,7 +60,8 @@ for user_id, rows in df.groupby(["user_id"]):
     for i, item in enumerate(ease.item_enc.transform(rows["item_id"])):
         factual[item] = rows.iloc[i]["rating"] / max_rating
 
-    preds = ease.predict(df, [user_id], ease.item_enc.classes_, topk)
+    # preds = ease.predict(df, [user_id], ease.item_enc.classes_, topk)
+    preds = ease.predict_mine(df, user_id, factual, ease.item_enc.classes_, topk)
     for j, expl_i in enumerate(ease.item_enc.transform(preds.iloc[:3]["item_id"])):
         if nth:
             if thresholding:
