@@ -6,7 +6,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from LiCE.lice.LiCE import LiCE
+from LiCE.lice.LiCE_rec import LiCE
 
 data_name = sys.argv[1]
 fold = int(sys.argv[2])
