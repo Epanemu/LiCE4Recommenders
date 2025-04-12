@@ -109,13 +109,16 @@ for user_id, rows in df.groupby(["user_id"]):
                     time_limit=time_limit,
                 )
 
-        scores = res[0] @ ease.B
-        true_position = np.sum(scores > scores[expl_i])
         stats = lice.stats
-        stats["factual_position"] = j + 1
-        stats["true_cf_position"] = true_position + 1
         stats["factual"] = factual
+        stats["factual_position"] = j + 1
+        if len(res) == 0:
+            allstats[user_id][expl_i] = stats
+            continue
+        scores = res[0] @ ease.B
         stats["counterfactual"] = res[0]
+        true_position = np.sum(scores > scores[expl_i])
+        stats["true_cf_position"] = true_position + 1
         cf = np.array(res[0])
         if group_f == "sum":
             spn_cf = [cf[g].sum(axis=1) for g in groups]
@@ -133,7 +136,7 @@ for user_id, rows in df.groupby(["user_id"]):
         stats["factual_ll"] = spn.compute_ll(spn_f)
         stats["distance"] = np.abs(factual - res[0])
         stats["sparsity"] = np.sum(~np.isclose(factual, res[0], atol=0.0001))
-        allstats[user_id][expl_i](stats)
+        allstats[user_id][expl_i] = stats
 
 with open(
     f"{help_folder}/{data_name}/{fold}/CEs/stats_{group_f}_{'rating' if rating_used else 'binary'}_{sys.argv[5]}_{sys.argv[6]}.pickle",
