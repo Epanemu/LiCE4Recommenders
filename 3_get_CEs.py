@@ -42,6 +42,7 @@ with open(f"{help_folder}/{data_name}/{fold}/test.pickle", "rb") as f:
     test_users = pickle.load(f)
 
 df = df[df["user_id"].isin(test_users)]
+groups = [ease.item_enc.transform(items) for items in groups]
 
 with open(
     f"{help_folder}/{data_name}/{fold}/models/spn_{group_f}_{'rating' if rating_used else 'binary'}.pickle",
