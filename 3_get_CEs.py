@@ -122,14 +122,14 @@ for user_id, rows in df.groupby(["user_id"]):
         stats["true_cf_position"] = true_position + 1
         cf = np.array(res[0])
         if group_f == "sum":
-            spn_cf = [cf[g].sum(axis=1) for g in groups]
-            spn_f = [factual[g].sum(axis=1) for g in groups]
+            spn_cf = [cf[g].sum() for g in groups]
+            spn_f = [factual[g].sum() for g in groups]
         elif group_f == "mean":
-            spn_cf = [cf[g].mean(axis=1) for g in groups]
-            spn_f = [factual[g].mean(axis=1) for g in groups]
+            spn_cf = [cf[g].mean() for g in groups]
+            spn_f = [factual[g].mean() for g in groups]
         elif group_f == "disjunction":
-            spn_cf = [(cf[g].sum(axis=1) > 0).astype(int) for g in groups]
-            spn_f = [(factual[g].sum(axis=1) > 0).astype(int) for g in groups]
+            spn_cf = [(cf[g].sum() > 0).astype(int) for g in groups]
+            spn_f = [(factual[g].sum() > 0).astype(int) for g in groups]
         elif group_f == "none":
             spn_cf = cf * max_rating
             spn_f = factual * max_rating
