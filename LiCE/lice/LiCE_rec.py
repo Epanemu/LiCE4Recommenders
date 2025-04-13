@@ -14,13 +14,16 @@ from .spn_enc import encode_spn
 class LiCE:
     MIO_EPS = 1e-6
 
-    def __init__(self,
-                 B: np.ndarray,
-                 max_stars: int = 1, # for 0/1 case
-                 spn: SPN | None = None,
-                 groups: list[list[str]] | None = None, # list of groups defined by list of items in them
-                 grouping_f: str = "none", # sum, mean, disjunction or none
-        ):
+    def __init__(
+        self,
+        B: np.ndarray,
+        max_stars: int = 1,  # for 0/1 case
+        spn: SPN | None = None,
+        groups: (
+            list[list[str]] | None
+        ) = None,  # list of groups defined by list of items in them
+        grouping_f: str = "none",  # sum, mean, disjunction or none
+    ):
         self.__B = B.astype(float)
         self.__M = (
             B[B > 0].sum(axis=0).max() - B[B < 0].sum(axis=0).min()
@@ -47,20 +50,20 @@ class LiCE:
     ) -> pyo.Model:
         model = pyo.ConcreteModel()
 
-        model.in_set = pyo.Set(
-            initialize=[i for i, f in enumerate(factual) if f != 0]
-        )
+        model.in_set = pyo.Set(initialize=[i for i, f in enumerate(factual) if f != 0])
         if self.__max_stars == 1:
             model.change = pyo.Var(model.in_set, domain=pyo.Binary)
         else:
-            model.change = pyo.Var(model.in_set, domain=pyo.Integers, bounds=lambda m, i: (0, round(factual[i]*self.__max_stars)),)
+            model.change = pyo.Var(
+                model.in_set,
+                domain=pyo.Integers,
+                bounds=lambda m, i: (0, round(factual[i] * self.__max_stars)),
+            )
 
         if selected_items is not None:
             model.out_set = pyo.Set(initialize=selected_items)
         else:
             model.out_set = pyo.Set(initialize=list(range(factual.shape[0])))
-
-
 
         if optimize_ll or ll_threshold > -np.inf:
             if self.__grouping_f == "none":
@@ -69,7 +72,8 @@ class LiCE:
                 model.spnInConstrNone = pyo.Constraint(
                     model.spn_i,
                     rule=lambda m, i: (
-                        round(factual[i]*self.__max_stars) - m.change[i] == m.spn_in[i]
+                        round(factual[i] * self.__max_stars) - m.change[i]
+                        == m.spn_in[i]
                     ),
                 )
             else:
@@ -80,14 +84,22 @@ class LiCE:
                     model.spnInConstr0 = pyo.Constraint(
                         model.spn_i,
                         rule=lambda m, i: (
-                            sum(factual[j] - m.change[j] / self.__max_stars for j in self.__groups[i] if j in m.in_set)
+                            sum(
+                                factual[j] - m.change[j] / self.__max_stars
+                                for j in self.__groups[i]
+                                if j in m.in_set
+                            )
                             >= m.spn_in[i] / self.__max_stars
                         ),
                     )
                     model.spnInConstr1 = pyo.Constraint(
                         model.spn_i,
                         rule=lambda m, i: (
-                            sum(factual[j] - m.change[j] / self.__max_stars for j in self.__groups[i] if j in m.in_set)
+                            sum(
+                                factual[j] - m.change[j] / self.__max_stars
+                                for j in self.__groups[i]
+                                if j in m.in_set
+                            )
                             <= m.spn_in[i] * len(self.__groups[i])
                         ),
                     )
@@ -100,7 +112,11 @@ class LiCE:
                     model.spnInConstrSum = pyo.Constraint(
                         model.spn_i,
                         rule=lambda m, i: (
-                            sum(factual[j] - m.change[j] / self.__max_stars for j in self.__groups[i] if j in m.in_set)
+                            sum(
+                                factual[j] - m.change[j] / self.__max_stars
+                                for j in self.__groups[i]
+                                if j in m.in_set
+                            )
                             == m.spn_in[i]
                         ),
                     )
@@ -109,11 +125,15 @@ class LiCE:
                     model.spnInConstrSum = pyo.Constraint(
                         model.spn_i,
                         rule=lambda m, i: (
-                            sum(factual[j] - m.change[j] / self.__max_stars for j in self.__groups[i] if j in m.in_set) / len(self.__groups[i])
+                            sum(
+                                factual[j] - m.change[j] / self.__max_stars
+                                for j in self.__groups[i]
+                                if j in m.in_set
+                            )
+                            / len(self.__groups[i])
                             == m.spn_in[i]
                         ),
                     )
-
 
             spn_inputs = model.spn_in
 
@@ -129,7 +149,11 @@ class LiCE:
             )
             # set up objective
             model.obj = pyo.Objective(
-                expr=sum(model.change[i] * weights[i] / self.__max_stars for i in model.in_set) - ll_opt_coef * spn_outputs[self.__spn.out_node_id],
+                expr=sum(
+                    model.change[i] * weights[i] / self.__max_stars
+                    for i in model.in_set
+                )
+                - ll_opt_coef * spn_outputs[self.__spn.out_node_id],
                 sense=pyo.minimize,
             )
             return model
@@ -150,13 +174,17 @@ class LiCE:
 
         # set up objective
         model.obj = pyo.Objective(
-            expr=sum(model.change[i] * weights[i] / self.__max_stars for i in model.in_set),
+            expr=sum(
+                model.change[i] * weights[i] / self.__max_stars for i in model.in_set
+            ),
             sense=pyo.minimize,
         )
 
         return model
 
-    def __set_up_below_score(self, model, factual: np.ndarray, item_i: int, score: float):
+    def __set_up_below_score(
+        self, model, factual: np.ndarray, item_i: int, score: float
+    ):
         model.below_score = pyo.Constraint(
             expr=sum(
                 (factual[i] - model.change[i] / self.__max_stars) * self.__B[i, item_i]
@@ -167,13 +195,12 @@ class LiCE:
 
     def __set_up_ordering(self, model, factual: np.ndarray, ordering: list[int]):
         model.order_range = pyo.Set(initialize=range(len(ordering)))
-        model.out = pyo.Var(
-            model.order_range, bounds=(None, None), domain=pyo.Reals
-        )
+        model.out = pyo.Var(model.order_range, bounds=(None, None), domain=pyo.Reals)
         model.out_constr = pyo.Constraint(
             model.order_range,
             rule=lambda m, ord_i: sum(
-                (factual[i] - m.change[i] / self.__max_stars) * self.__B[i, ordering[ord_i]]
+                (factual[i] - m.change[i] / self.__max_stars)
+                * self.__B[i, ordering[ord_i]]
                 for i in m.in_set
             )
             == m.out[ord_i],
@@ -187,16 +214,15 @@ class LiCE:
             ),
         )
 
-    def __set_up_nth(
-        self, model, factual: np.ndarray, picked_i: int, nth_place: int
-    ):
-        model.out = pyo.Var(
-            model.out_set, bounds=(None, None), domain=pyo.Reals
-        )
+    def __set_up_nth(self, model, factual: np.ndarray, picked_i: int, nth_place: int):
+        model.out = pyo.Var(model.out_set, bounds=(None, None), domain=pyo.Reals)
         model.out_constr = pyo.Constraint(
             model.out_set,
             rule=lambda m, out_i: (
-                sum((factual[i] - m.change[i] / self.__max_stars) * self.__B[i, out_i] for i in m.in_set)
+                sum(
+                    (factual[i] - m.change[i] / self.__max_stars) * self.__B[i, out_i]
+                    for i in m.in_set
+                )
                 == m.out[out_i]
             ),
         )
@@ -216,11 +242,10 @@ class LiCE:
             expr=sum(b for b in model.better.values()) >= nth_place - 1
         )
 
-
     def generate_counterfactual(
         self,
-        factual: np.ndarray, # assumed in the correct item order...
-        selected_item: int, # assumed to be the correct index...
+        factual: np.ndarray,  # assumed in the correct item order...
+        selected_item: int,  # assumed to be the correct index...
         score: float | None = None,
         nth: int | None = None,
         weights: np.ndarray | None = None,
@@ -340,7 +365,12 @@ class LiCE:
             and result.solver.termination_condition == TerminationCondition.maxTimeLimit
         ):
             print("TIME LIMIT")
-            model.solutions.load_from(result)
+            try:
+                model.solutions.load_from(result)
+            except ValueError:
+                self.__t_tot = (perf_counter() - t_start,)
+                self.__optimal = False
+                return []
             CEs = self.__get_CEs(n_counterfactuals, model, factual, opt)
             self.__t_tot = (perf_counter() - t_start,)
             self.__optimal = False
@@ -362,7 +392,12 @@ class LiCE:
         if n > 1:
             raise ValueError("this is not re implemented for recommenders")
         else:
-            self.__distances.append(sum(self.__model.change[i].value / self.__max_stars for i in self.__model.in_set))
+            self.__distances.append(
+                sum(
+                    self.__model.change[i].value / self.__max_stars
+                    for i in self.__model.in_set
+                )
+            )
             if hasattr(self.__model, "spn"):
                 self.__loglikelihoods.append(
                     self.__model.spn.node_out[self.__spn.out_node_id].value
