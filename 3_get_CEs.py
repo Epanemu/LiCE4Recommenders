@@ -57,6 +57,8 @@ else:
     lice = LiCE(ease.B, max_rating, spn, groups, group_f)
 allstats = defaultdict(dict)
 for user_id, rows in df.groupby(["user_id"]):
+    # groupby makes tuples - user_id is simply the first one
+    user_id = user_id[0]
     factual = np.zeros((ease.B.shape[0],))
     for i, item in enumerate(ease.item_enc.transform(rows["item_id"])):
         factual[item] = rows.iloc[i]["rating"] / max_rating
