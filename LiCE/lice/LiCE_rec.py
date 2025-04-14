@@ -335,6 +335,7 @@ class LiCE:
         self.__model = model
         self.__loglikelihoods = []
         self.__distances = []
+        self.__timeout = False
 
         if verbose:
             if "gurobi" in solver_name:
@@ -365,19 +366,20 @@ class LiCE:
             and result.solver.termination_condition == TerminationCondition.maxTimeLimit
         ):
             print("TIME LIMIT")
+            self.__timeout = True
             try:
                 model.solutions.load_from(result)
             except ValueError:
-                self.__t_tot = (perf_counter() - t_start,)
+                self.__t_tot = perf_counter() - t_start
                 self.__optimal = False
                 return []
             CEs = self.__get_CEs(n_counterfactuals, model, factual, opt)
-            self.__t_tot = (perf_counter() - t_start,)
+            self.__t_tot = perf_counter() - t_start
             self.__optimal = False
             return CEs
         # else:
 
-        self.__t_tot = (perf_counter() - t_start,)
+        self.__t_tot = perf_counter() - t_start
         self.__optimal = False
         # print result if it wasn't printed yet
         if not verbose:
@@ -402,7 +404,7 @@ class LiCE:
                 self.__loglikelihoods.append(
                     self.__model.spn.node_out[self.__spn.out_node_id].value
                 )
-            res = factual
+            res = factual.copy()
             for i in self.__model.in_set:
                 res[i] -= self.__model.change[i].value / self.__max_stars
             return [res]
@@ -414,6 +416,7 @@ class LiCE:
             "time_solving": self.__t_solve,
             "time_building": self.__t_build,
             "optimal": self.__optimal,
+            "timeout": self.__timeout,
             "ll_computed": self.__loglikelihoods,
             "dist_computed": self.__distances,
         }
