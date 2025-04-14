@@ -135,7 +135,7 @@ for user_id, rows in df.groupby(["user_id"]):
         elif group_f == "none":
             spn_cf = cf * max_rating
             spn_f = factual * max_rating
-        stats["couterfactual_ll"] = spn.compute_ll(np.array(spn_cf))
+        stats["counterfactual_ll"] = spn.compute_ll(np.array(spn_cf))
         stats["factual_ll"] = spn.compute_ll(np.array(spn_f))
         stats["distance"] = np.abs(factual - res[0])
         stats["sparsity"] = np.sum(~np.isclose(factual, res[0], atol=0.0001))
