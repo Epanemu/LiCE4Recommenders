@@ -17,9 +17,9 @@ no_spn = sys.argv[5] == "no_spn"
 if not thresholding and not no_spn:
     opt_coeff = float(sys.argv[5])  # 0.05
 nth = sys.argv[6] == "nth"
+topk = int(sys.argv[7])
 
 time_limit = 600
-topk = 10
 help_folder = "data_splits"
 
 os.makedirs(f"{help_folder}/{data_name}/{fold}/CEs", exist_ok=True)
@@ -139,10 +139,12 @@ for user_id, rows in df.groupby(["user_id"]):
         stats["factual_ll"] = spn.compute_ll(np.array(spn_f))
         stats["distance"] = np.sum(np.abs(factual - res[0]))
         stats["sparsity"] = np.sum(~np.isclose(factual, res[0], atol=0.0001))
+        stats["threshold"] = median_ll if thresholding else -np.inf
+        stats["opt_coeff"] = 0 if no_spn or thresholding else opt_coeff
         allstats[user_id][expl_i] = stats
 
 with open(
-    f"{help_folder}/{data_name}/{fold}/CEs/stats_{group_f}_{'rating' if rating_used else 'binary'}_{sys.argv[5]}_{sys.argv[6]}.pickle",
+    f"{help_folder}/{data_name}/{fold}/CEs/stats_{group_f}_{'rating' if rating_used else 'binary'}_{sys.argv[5]}_{sys.argv[6]}_{sys.argv[7]}.pickle",
     "wb",
 ) as f:
     pickle.dump(allstats, f)
