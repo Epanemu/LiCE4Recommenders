@@ -61,7 +61,10 @@ for user_id, rows in df.groupby(["user_id"]):
     user_id = user_id[0]
     factual = np.zeros((ease.B.shape[0],))
     for i, item in enumerate(ease.item_enc.transform(rows["item_id"])):
-        factual[item] = rows.iloc[i]["rating"] / max_rating
+        if rating_used:
+            factual[item] = rows.iloc[i]["rating"] / max_rating
+        else:
+            factual[item] = (rows.iloc[i]["rating"] != 0).astype(int)
 
     # preds = ease.predict(df, [user_id], ease.item_enc.classes_, topk)
     preds = ease.predict_mine(df, user_id, factual, ease.item_enc.classes_, topk)
